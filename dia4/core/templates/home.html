@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Consulta CEP</title>
+
+  <!-- Fonte opcional do Google (pode remover se quiser offline) -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg1:#0f172a;      /* slate-900 */
+      --bg2:#1e293b;      /* slate-800 */
+      --card:#0b1020f2;   /* semi-transparente */
+      --brand:#6366f1;    /* indigo-500 */
+      --brand-strong:#4f46e5;
+      --text:#e5e7eb;     /* gray-200 */
+      --muted:#94a3b8;    /* slate-400 */
+      --ok:#22c55e;       /* green-500 */
+      --err:#ef4444;      /* red-500 */
+      --border:#27314a;   /* slate-700 */
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body{
+      margin:0;
+      color:var(--text);
+      font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji", sans-serif;
+      background:
+        radial-gradient(900px 600px at 10% 10%, #1b244323, transparent 70%),
+        radial-gradient(900px 600px at 90% 20%, #2b3a6a2a, transparent 70%),
+        linear-gradient(135deg, var(--bg1), var(--bg2));
+      display:grid;
+      place-items:center;
+      padding:24px;
+    }
+
+    .container{
+      width:100%;
+      max-width:760px;
+      background:linear-gradient(180deg, #0b1120e6, #0b1120cc);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    header{
+      padding:28px 28px 8px;
+    }
+
+    .title{
+      margin:0;
+      font-weight:700;
+      letter-spacing:.2px;
+      font-size: clamp(1.25rem, 1.1rem + 1vw, 1.75rem);
+    }
+
+    .subtitle{
+      margin:.35rem 0 0;
+      color:var(--muted);
+      font-size:.95rem;
+    }
+
+    .content{
+      padding: 8px 28px 28px;
+    }
+
+    .form{
+      display:flex;
+      gap:12px;
+      flex-wrap: wrap;
+      align-items:center;
+      margin-top:18px;
+    }
+
+    .field{
+      flex:1 1 280px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    label{
+      font-size:.9rem;
+      color:var(--muted);
+    }
+
+    input[type="text"]{
+      background:#0b1227;
+      color:var(--text);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:14px 14px;
+      outline:none;
+      transition:.2s border, .2s box-shadow;
+      font-size:1rem;
+      letter-spacing:.3px;
+    }
+    input[type="text"]:focus{
+      border-color: var(--brand);
+      box-shadow: 0 0 0 4px #6366f130;
+    }
+
+    .actions{
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+
+    button{
+      appearance:none;
+      border:none;
+      border-radius:12px;
+      padding:14px 18px;
+      font-weight:600;
+      cursor:pointer;
+      background:linear-gradient(180deg, var(--brand), var(--brand-strong));
+      color:white;
+      transition: transform .04s ease, filter .2s ease, opacity .2s ease;
+      will-change: transform;
+      box-shadow: 0 8px 18px rgba(79,70,229,.35);
+      font-size:1rem;
+    }
+    button:hover{ filter:brightness(1.05); }
+    button:active{ transform: translateY(1px); }
+    button[disabled]{ opacity:.6; cursor:not-allowed; box-shadow:none; }
+
+    .hint{
+      font-size:.85rem;
+      color:var(--muted);
+      margin-top:6px;
+    }
+
+    .result{
+      margin-top:22px;
+      border-top:1px dashed var(--border);
+      padding-top:22px;
+      display:grid;
+      gap:14px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap:12px 16px;
+    }
+    @media (max-width:560px) {
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .item{
+      background:#0c142b;
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:12px 14px;
+    }
+    .item .k{ color:var(--muted); font-size:.8rem; }
+    .item .v{ margin-top:4px; font-weight:600; }
+
+    .alert{
+      border-radius:12px;
+      padding:12px 14px;
+      border:1px solid var(--border);
+      background:#1a243f;
+      color:var(--text);
+    }
+    .alert.ok{ border-color:#1f9d59; background:#11291a; }
+    .alert.err{ border-color:#7f1d1d; background:#2a0e10; }
+
+    .loading{
+      display:none;
+      gap:10px;
+      align-items:center;
+      color:var(--muted);
+      font-size:.95rem;
+    }
+    .loading.show{ display:flex; }
+
+    .spinner{
+      width:18px; height:18px; border:2px solid #ffffff22; border-top-color:#fff;
+      border-radius:50%; animation: spin 1s linear infinite;
+    }
+    @keyframes spin{ to { transform: rotate(360deg); } }
+
+    footer{
+      padding: 8px 28px 28px;
+      color:var(--muted);
+      font-size:.85rem;
+      display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;
+      border-top:1px solid #0a102233;
+    }
+    code{ background:#0c142b; padding:2px 6px; border-radius:6px; border:1px solid var(--border); }
+  </style>
+</head>
+<body>
+  <main class="container" role="main">
+    <header>
+      <h1 class="title">Consulta CEP</h1>
+      <p class="subtitle">Busque um endereço pelo CEP usando a API ViaCEP.</p>
+    </header>
+
+    <section class="content">
+      <!-- GET não precisa de CSRF -->
+      <form class="form" method="GET" action="{% url 'consulta_cep' %}" novalidate>
+        <div class="field">
+          <label for="cep">CEP</label>
+          <input
+            id="cep"
+            type="text"
+            name="cep"
+            inputmode="numeric"
+            autocomplete="postal-code"
+            placeholder="Digite o CEP (somente números)"
+            maxlength="9"
+            pattern="\\d{5}-?\\d{3}"
+            value="{{ request.GET.cep|default:'' }}"
+            aria-describedby="hint-cep"
+            required
+          />
+          <small id="hint-cep" class="hint">Formato aceito: <code>00000-000</code> ou <code>00000000</code>.</small>
+        </div>
+
+        <div class="actions">
+          <button id="btn-submit" type="submit">Consultar</button>
+          <div id="loading" class="loading" aria-live="polite">
+            <div class="spinner" aria-hidden="true"></div>
+            <span>Consultando…</span>
+          </div>
+        </div>
+
+        {% if error %}
+          <div class="result">
+            <div class="alert err">⚠️ {{ error }}</div>
+          </div>
+        {% endif %}
+
+        {% if endereco %}
+          <div class="result">
+            <div class="alert ok">✅ Endereço encontrado!</div>
+
+            <!-- Caso 'endereco' seja um dict/objeto do ViaCEP -->
+            <div class="grid">
+              <div class="item">
+                <div class="k">CEP</div>
+                <div class="v">{{ endereco.cep|default:request.GET.cep }}</div>
+              </div>
+              <div class="item">
+                <div class="k">Logradouro</div>
+                <div class="v">{{ endereco.logradouro|default:"—" }}</div>
+              </div>
+              <div class="item">
+                <div class="k">Bairro</div>
+                <div class="v">{{ endereco.bairro|default:"—" }}</div>
+              </div>
+              <div class="item">
+                <div class="k">Cidade</div>
+                <div class="v">{{ endereco.localidade|default:"—" }}</div>
+              </div>
+              <div class="item">
+                <div class="k">UF</div>
+                <div class="v">{{ endereco.uf|default:"—" }}</div>
+              </div>
+              <div class="item">
+                <div class="k">Complemento</div>
+                <div class="v">{{ endereco.complemento|default:"—" }}</div>
+              </div>
+            </div>
+
+            <!-- Fallback: se 'endereco' for string simples -->
+            <p class="hint">Dados brutos: <code>{{ endereco }}</code></p>
+          </div>
+        {% endif %}
+      </form>
+    </section>
+
+    <footer>
+      <span>Dica: você pode digitar o CEP com ou sem traço.</span>
+      <span>Powered by ViaCEP • Exemplo acadêmico</span>
+    </footer>
+  </main>
+
+  <script>
+    // Máscara simples de CEP (00000-000) e UX de carregamento
+    const cepInput = document.getElementById('cep');
+    const form = document.querySelector('form');
+    const loading = document.getElementById('loading');
+    const btn = document.getElementById('btn-submit');
+
+    // Aplica máscara enquanto digita
+    cepInput.addEventListener('input', () => {
+      let v = cepInput.value.replace(/\D/g, '').slice(0, 8);
+      if (v.length > 5) v = v.slice(0,5) + '-' + v.slice(5);
+      cepInput.value = v;
+    });
+
+    // Mostra estado de "Consultando…" após submit
+    form.addEventListener('submit', () => {
+      loading.classList.add('show');
+      btn.setAttribute('disabled', 'disabled');
+    });
+  </script>
+</body>
+</html>

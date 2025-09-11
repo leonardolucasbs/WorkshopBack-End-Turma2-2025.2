@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Exibindo endereço</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <h1>Mostrando CEP com ID {{ object.pk }}</h1>
+
+    <p><strong>CEP:</strong> {{ object.cep }}</p>
+    <p><strong>Rua:</strong> {{ object.rua }}</p>
+    <p><strong>Bairro:</strong> {{ object.bairro }}</p>
+    <p><strong>Cidade:</strong> {{ object.cidade }}</p>
+    <p><strong>Estado:</strong> {{ object.estado }}</p>
+</body>
+</html>
